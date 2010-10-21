@@ -31,6 +31,7 @@ import unittest2
 import sys
 import Tkinter
 import tkMessageBox
+import tkFileDialog
 import traceback
 
 import string
@@ -51,6 +52,7 @@ class BaseGUITestRunner:
         self.currentResult = None
         self.running = 0
         self.__rollbackImporter = None
+        self.test_suite = None
         apply(self.initGUI, args, kwargs)
 
     def getSelectedTestName(self):
@@ -61,30 +63,29 @@ class BaseGUITestRunner:
         "Override to display an error arising from GUI usage"
         pass
 
+    def getDirectoryToDiscover(self):
+        "Override to prompt user for directory to perform test discovery"
+        pass
+
+    def showDiscoveredTests(self, test_suite):
+        "Override to display information about the suite of discovered tests"
+        pass
+
     def runClicked(self):
         "To be called in response to user choosing to run a test"
         if self.running: return
         testName = self.getSelectedTestName()
-        if not testName:
-            self.errorDialog("Test name entry", "You must enter a test name")
+        if not self.test_suite:
+            self.errorDialog("Test Discovery", "You discover some tests first!")
             return
         if self.__rollbackImporter:
             self.__rollbackImporter.rollbackImports()
         self.__rollbackImporter = RollbackImporter()
-        try:
-            test = unittest2.defaultTestLoader.loadTestsFromName(testName)
-        except:
-            exc_type, exc_value, exc_tb = sys.exc_info()
-            apply(traceback.print_exception,sys.exc_info())
-            self.errorDialog("Unable to run test '%s'" % testName,
-                             "Error loading specified test: %s, %s" % \
-                             (exc_type, exc_value))
-            return
         self.currentResult = GUITestResult(self)
-        self.totalTests = test.countTestCases()
+        self.totalTests = self.test_suite.countTestCases()
         self.running = 1
         self.notifyRunning()
-        test.run(self.currentResult)
+        self.test_suite.run(self.currentResult)
         self.running = 0
         self.notifyStopped()
 
@@ -92,6 +93,21 @@ class BaseGUITestRunner:
         "To be called in response to user stopping the running of a test"
         if self.currentResult:
             self.currentResult.stop()
+
+    def discoverClicked(self):
+        directory = self.getDirectoryToDiscover()
+        if not directory:
+            return
+        try:
+            tests = unittest2.defaultTestLoader.discover(directory)
+            self.test_suite = tests
+        except:
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            apply(traceback.print_exception,sys.exc_info())
+            self.errorDialog("Unable to run test '%s'" % directory,
+                             "Error loading specified test: %s, %s" % (exc_type, exc_value))
+            return
+        self.showDiscoveredTests(self.test_suite)
 
     # Required callbacks
 
@@ -206,6 +222,21 @@ class TkTestRunner(BaseGUITestRunner):
         self.top.pack(fill=tk.BOTH, expand=1)
         self.createWidgets()
 
+    def getDirectory(self):
+        directory = tkFileDialog.askdirectory()
+        self.suiteNameVar.set(directory)
+
+    def getDirectoryToDiscover(self):
+        return tkFileDialog.askdirectory()
+
+    def showDiscoveredTests(self, test_suite):
+        self.runCountVar.set(0)
+        self.failCountVar.set(0)
+        self.errorCountVar.set(0)
+        self.remainingCountVar.set(test_suite.countTestCases())
+        self.progressBar.setProgressFraction(0.0)
+        self.errorListbox.delete(0, tk.END)
+
     def createWidgets(self):
         """Creates and packs the various widgets.
         
@@ -222,11 +253,6 @@ class TkTestRunner(BaseGUITestRunner):
         leftFrame.pack(fill=tk.BOTH, side=tk.LEFT, anchor=tk.NW, expand=1)
         suiteNameFrame = tk.Frame(leftFrame, borderwidth=3)
         suiteNameFrame.pack(fill=tk.X)
-        tk.Label(suiteNameFrame, text="Enter test name:").pack(side=tk.LEFT)
-        e = tk.Entry(suiteNameFrame, textvariable=self.suiteNameVar, width=25)
-        e.pack(side=tk.LEFT, fill=tk.X, expand=1)
-        e.focus_set()
-        e.bind('<Key-Return>', lambda e, self=self: self.runClicked())
 
         # Progress bar
         progressFrame = tk.Frame(leftFrame, relief=tk.GROOVE, borderwidth=2)
@@ -236,12 +262,19 @@ class TkTestRunner(BaseGUITestRunner):
                                        borderwidth=2)
         self.progressBar.pack(fill=tk.X, expand=1)
 
+
         # Area with buttons to start/stop tests and quit
         buttonFrame = tk.Frame(self.top, borderwidth=3)
         buttonFrame.pack(side=tk.LEFT, anchor=tk.NW, fill=tk.Y)
+
+        tk.Button(buttonFrame, text="Discover Tests",
+                  command=self.discoverClicked).pack(fill=tk.X)
+
+
         self.stopGoButton = tk.Button(buttonFrame, text="Start",
                                       command=self.runClicked)
         self.stopGoButton.pack(fill=tk.X)
+
         tk.Button(buttonFrame, text="Close",
                   command=self.top.quit).pack(side=tk.BOTTOM, fill=tk.X)
         tk.Button(buttonFrame, text="About",
