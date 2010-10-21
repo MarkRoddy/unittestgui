@@ -27,7 +27,7 @@ SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 __author__ = "Steve Purcell (stephen_purcell@yahoo.com)"
 __version__ = "$Revision: 1.7 $"[11:-2]
 
-import unittest
+import unittest2
 import sys
 import Tkinter
 import tkMessageBox
@@ -72,7 +72,7 @@ class BaseGUITestRunner:
             self.__rollbackImporter.rollbackImports()
         self.__rollbackImporter = RollbackImporter()
         try:
-            test = unittest.defaultTestLoader.loadTestsFromName(testName)
+            test = unittest2.defaultTestLoader.loadTestsFromName(testName)
         except:
             exc_type, exc_value, exc_tb = sys.exc_info()
             apply(traceback.print_exception,sys.exc_info())
@@ -121,28 +121,28 @@ class BaseGUITestRunner:
         pass
 
 
-class GUITestResult(unittest.TestResult):
+class GUITestResult(unittest2.TestResult):
     """A TestResult that makes callbacks to its associated GUI TestRunner.
     Used by BaseGUITestRunner. Need not be created directly.
     """
     def __init__(self, callback):
-	unittest.TestResult.__init__(self)
+	unittest2.TestResult.__init__(self)
 	self.callback = callback
 
     def addError(self, test, err):
-	unittest.TestResult.addError(self, test, err)
+	unittest2.TestResult.addError(self, test, err)
 	self.callback.notifyTestErrored(test, err)
 
     def addFailure(self, test, err):
-	unittest.TestResult.addFailure(self, test, err)
+	unittest2.TestResult.addFailure(self, test, err)
 	self.callback.notifyTestFailed(test, err)
 
     def stopTest(self, test):
-        unittest.TestResult.stopTest(self, test)
+        unittest2.TestResult.stopTest(self, test)
         self.callback.notifyTestFinished(test)
 
     def startTest(self, test):
-        unittest.TestResult.startTest(self, test)
+        unittest2.TestResult.startTest(self, test)
         self.callback.notifyTestStarted(test)
 
 
