@@ -11,7 +11,7 @@ setup (
     author_email = "stephen_purcell@yahoo.com",
     url = "http://pyunit.sourceforge.net/",
        
-    py_modules = ['unittest', 'unittestgui']
+    py_modules = ['unittestgui',]
     )
       
       
