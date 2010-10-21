@@ -89,6 +89,7 @@ class BaseGUITestRunner(object):
         directory = self.getDirectoryToDiscover()
         if not directory:
             return
+        self.directory_to_read = directory
         try:
             tests = unittest2.defaultTestLoader.discover(directory)
             self.test_suite = tests
@@ -205,12 +206,18 @@ class TkTestRunner(BaseGUITestRunner):
         self.suiteNameVar.set(initialTestName)
         self.statusVar = tk.StringVar()
         self.statusVar.set("Idle")
+
+        #tk vars for tracking counts of test result types
         self.runCountVar = tk.IntVar()
         self.failCountVar = tk.IntVar()
         self.errorCountVar = tk.IntVar()
         self.skipCountVar = tk.IntVar()
         self.expectFailCountVar = tk.IntVar()
         self.remainingCountVar = tk.IntVar()
+
+        #test discovery variables
+        self.directory_to_read = ''
+
         self.top = tk.Frame()
         self.top.pack(fill=tk.BOTH, expand=1)
         self.createWidgets()
@@ -229,6 +236,7 @@ class TkTestRunner(BaseGUITestRunner):
         self.remainingCountVar.set(test_suite.countTestCases())
         self.progressBar.setProgressFraction(0.0)
         self.errorListbox.delete(0, tk.END)
+        self.statusVar.set("Discovering tests from %s" % self.directory_to_read)
 
     def createWidgets(self):
         """Creates and packs the various widgets.
