@@ -191,26 +191,6 @@ class RollbackImporter:
 # Tkinter GUI
 ##############################################################################
 
-_ABOUT_TEXT="""\
-PyUnit unit testing framework.
-
-For more information, visit
-http://pyunit.sourceforge.net/
-
-Copyright (c) 2000 Steve Purcell
-<stephen_purcell@yahoo.com>
-"""
-_HELP_TEXT="""\
-Enter the name of a callable object which, when called, will return a \
-TestCase or TestSuite. Click 'start', and the test thus produced will be run.
-
-Double click on an error in the listbox to see more information about it,\
-including the stack trace.
-
-For more information, visit
-http://pyunit.sourceforge.net/
-or see the bundled documentation
-"""
 
 class TkTestRunner(BaseGUITestRunner):
     """An implementation of BaseGUITestRunner using Tkinter.
@@ -290,10 +270,6 @@ class TkTestRunner(BaseGUITestRunner):
 
         tk.Button(buttonFrame, text="Close",
                   command=self.top.quit).pack(side=tk.BOTTOM, fill=tk.X)
-        tk.Button(buttonFrame, text="About",
-                  command=self.showAboutDialog).pack(side=tk.BOTTOM, fill=tk.X)
-        tk.Button(buttonFrame, text="Help",
-                  command=self.showHelpDialog).pack(side=tk.BOTTOM, fill=tk.X)
 
         # Area with labels reporting results
         for label, var in (('Run:', self.runCountVar),
@@ -375,14 +351,6 @@ class TkTestRunner(BaseGUITestRunner):
         fractionDone = float(self.runCountVar.get())/float(self.totalTests)
         fillColor = len(self.errorInfo) and "red" or "green"
         self.progressBar.setProgressFraction(fractionDone, fillColor)
-
-    def showAboutDialog(self):
-        tkMessageBox.showinfo(parent=self.root, title="About PyUnit",
-                              message=_ABOUT_TEXT)
-
-    def showHelpDialog(self):
-        tkMessageBox.showinfo(parent=self.root, title="PyUnit help",
-                              message=_HELP_TEXT)
 
     def showSelectedError(self):
         selection = self.errorListbox.curselection()
