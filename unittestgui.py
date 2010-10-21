@@ -67,10 +67,6 @@ class BaseGUITestRunner:
         "Override to prompt user for directory to perform test discovery"
         pass
 
-    def showDiscoveredTests(self, test_suite):
-        "Override to display information about the suite of discovered tests"
-        pass
-
     def runClicked(self):
         "To be called in response to user choosing to run a test"
         if self.running: return
@@ -107,9 +103,13 @@ class BaseGUITestRunner:
             self.errorDialog("Unable to run test '%s'" % directory,
                              "Error loading specified test: %s, %s" % (exc_type, exc_value))
             return
-        self.showDiscoveredTests(self.test_suite)
+        self.notifyTestsDiscovered(self.test_suite)
 
     # Required callbacks
+
+    def notifyTestsDiscovered(self, test_suite):
+        "Override to display information about the suite of discovered tests"
+        pass
 
     def notifyRunning(self):
         "Override to set GUI in 'running' mode, enabling 'stop' button etc."
@@ -229,7 +229,7 @@ class TkTestRunner(BaseGUITestRunner):
     def getDirectoryToDiscover(self):
         return tkFileDialog.askdirectory()
 
-    def showDiscoveredTests(self, test_suite):
+    def notifyTestsDiscovered(self, test_suite):
         self.runCountVar.set(0)
         self.failCountVar.set(0)
         self.errorCountVar.set(0)
