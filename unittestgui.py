@@ -201,9 +201,7 @@ class TkTestRunner(BaseGUITestRunner):
         field will be pre-filled with the given initialTestName.
         """
         self.root = root
-        # Set up values that will be tied to widgets
-        self.suiteNameVar = tk.StringVar()
-        self.suiteNameVar.set(initialTestName)
+
         self.statusVar = tk.StringVar()
         self.statusVar.set("Idle")
 
@@ -221,10 +219,6 @@ class TkTestRunner(BaseGUITestRunner):
         self.top = tk.Frame()
         self.top.pack(fill=tk.BOTH, expand=1)
         self.createWidgets()
-
-    def getDirectory(self):
-        directory = tkFileDialog.askdirectory()
-        self.suiteNameVar.set(directory)
 
     def getDirectoryToDiscover(self):
         return tkFileDialog.askdirectory()
