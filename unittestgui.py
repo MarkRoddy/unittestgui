@@ -55,10 +55,6 @@ class BaseGUITestRunner:
         self.test_suite = None
         apply(self.initGUI, args, kwargs)
 
-    def getSelectedTestName(self):
-        "Override to return the name of the test selected to be run"
-        pass
-
     def errorDialog(self, title, message):
         "Override to display an error arising from GUI usage"
         pass
@@ -70,7 +66,6 @@ class BaseGUITestRunner:
     def runClicked(self):
         "To be called in response to user choosing to run a test"
         if self.running: return
-        testName = self.getSelectedTestName()
         if not self.test_suite:
             self.errorDialog("Test Discovery", "You discover some tests first!")
             return
@@ -306,10 +301,6 @@ class TkTestRunner(BaseGUITestRunner):
         self.errorListbox.bind("<Double-1>",
                                lambda e, self=self: self.showSelectedError())
         self.errorListbox.configure(yscrollcommand=listScroll.set)
-
-
-    def getSelectedTestName(self):
-        return self.suiteNameVar.get()
 
     def errorDialog(self, title, message):
         tkMessageBox.showerror(parent=self.root, title=title,
