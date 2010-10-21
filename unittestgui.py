@@ -42,7 +42,7 @@ tk = Tkinter # Alternative to the messy 'from Tkinter import *' often seen
 # GUI framework classes
 ##############################################################################
 
-class BaseGUITestRunner:
+class BaseGUITestRunner(object):
     """Subclass this class to create a GUI TestRunner that uses a specific
     windowing toolkit. The class takes care of running tests in the correct
     manner, and making callbacks to the derived class to obtain information
@@ -122,6 +122,14 @@ class BaseGUITestRunner:
         "Override to indicate that a test has just errored"
         pass
 
+    def notifyTestSkipped(self, test, reason):
+        "Override to indicate that test was skipped"
+        pass
+
+    def notifyTestFailedExpectedly(self, test, err):
+        "Override to indicate that test has just failed expectedly"
+        pass
+
     def notifyTestStarted(self, test):
         "Override to indicate that a test is about to run"
         pass
@@ -147,6 +155,14 @@ class GUITestResult(unittest2.TestResult):
     def addFailure(self, test, err):
         unittest2.TestResult.addFailure(self, test, err)
         self.callback.notifyTestFailed(test, err)
+
+    def addSkip(self, test, reason):
+        super(GUITestResult,self).addSkip(test, reason)
+        self.callback.notifyTestSkipped(test, reason)
+
+    def addExpectedFailure(self, test, err):
+        super(GUITestResult,self).addExpectedFailure(test, err)
+        self.callback.notifyTestFailedExpectedly(test, err)
 
     def stopTest(self, test):
         unittest2.TestResult.stopTest(self, test)
@@ -212,6 +228,8 @@ class TkTestRunner(BaseGUITestRunner):
         self.runCountVar = tk.IntVar()
         self.failCountVar = tk.IntVar()
         self.errorCountVar = tk.IntVar()
+        self.skipCountVar = tk.IntVar()
+        self.expectFailCountVar = tk.IntVar()
         self.remainingCountVar = tk.IntVar()
         self.top = tk.Frame()
         self.top.pack(fill=tk.BOTH, expand=1)
@@ -281,7 +299,10 @@ class TkTestRunner(BaseGUITestRunner):
         for label, var in (('Run:', self.runCountVar),
                            ('Failures:', self.failCountVar),
                            ('Errors:', self.errorCountVar),
-                           ('Remaining:', self.remainingCountVar)):
+                           ('Skipped:', self.skipCountVar),
+                           ('Expected Failures:', self.expectFailCountVar),
+                           ('Remaining:', self.remainingCountVar),
+                           ):
             tk.Label(progressFrame, text=label).pack(side=tk.LEFT)
             tk.Label(progressFrame, textvariable=var,
                      foreground="blue").pack(side=tk.LEFT, fill=tk.X,
@@ -338,6 +359,15 @@ class TkTestRunner(BaseGUITestRunner):
         self.errorCountVar.set(1 + self.errorCountVar.get())
         self.errorListbox.insert(tk.END, "Error: %s" % test)
         self.errorInfo.append((test,err))
+
+    def notifyTestSkipped(self, test, reason):
+        super(TkTestRunner, self).notifyTestSkipped(test, reason)
+        self.skipCountVar.set(1 + self.skipCountVar.get())
+
+    def notifyTestFailedExpectedly(self, test, err):
+        super(TkTestRunner, self).notifyTestFailedExpectedly(test, err)
+        self.expectFailCountVar.set(1 + self.expectFailCountVar.get())
+
 
     def notifyTestFinished(self, test):
         self.remainingCountVar.set(self.remainingCountVar.get() - 1)
