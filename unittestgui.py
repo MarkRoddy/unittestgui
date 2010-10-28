@@ -32,6 +32,7 @@ import sys
 import Tkinter
 import tkMessageBox
 import tkFileDialog
+import tkSimpleDialog
 import traceback
 
 import string
@@ -53,7 +54,13 @@ class BaseGUITestRunner(object):
         self.running = 0
         self.__rollbackImporter = None
         self.test_suite = None
-        apply(self.initGUI, args, kwargs)
+
+        #test discovery variables
+        self.directory_to_read = ''
+        self.top_level_dir = ''
+        self.test_file_glob_pattern = 'test*.py'
+
+        self.initGUI(*args, **kwargs)
 
     def errorDialog(self, title, message):
         "Override to display an error arising from GUI usage"
@@ -91,7 +98,7 @@ class BaseGUITestRunner(object):
             return
         self.directory_to_read = directory
         try:
-            tests = unittest2.defaultTestLoader.discover(directory)
+            tests = unittest2.defaultTestLoader.discover(directory, self.test_file_glob_pattern, self.top_level_dir)
             self.test_suite = tests
         except:
             exc_type, exc_value, exc_tb = sys.exc_info()
@@ -192,6 +199,35 @@ class RollbackImporter:
 # Tkinter GUI
 ##############################################################################
 
+class DiscoverSettingsDialog(tkSimpleDialog.Dialog):
+    """
+    Dialog box for prompting test discovery settings
+    """
+
+    def __init__(self, master, top_level_dir, test_file_glob_pattern, *args, **kwargs):
+        self.top_level_dir = top_level_dir
+        self.dirVar = tk.StringVar()
+        self.dirVar.set(top_level_dir)
+
+        self.test_file_glob_pattern = test_file_glob_pattern
+        self.testPatternVar = tk.StringVar()
+        self.testPatternVar.set(test_file_glob_pattern)
+
+        tkSimpleDialog.Dialog.__init__(self, master, *args, **kwargs)
+
+    def body(self, master):
+        tk.Label(master, text="Top Level Directory").grid(row=0)
+        self.e1 = tk.Entry(master, textvariable=self.dirVar)
+        self.e1.grid(row = 0, column=1)
+
+        tk.Label(master, text="Test File Pattern").grid(row=1)
+        self.e2 = tk.Entry(master, textvariable = self.testPatternVar)
+        self.e2.grid(row = 1, column=1)
+        return None
+        
+    def apply(self):
+        self.top_level_dir = self.dirVar.get()
+        self.test_file_glob_pattern = self.testPatternVar.get()
 
 class TkTestRunner(BaseGUITestRunner):
     """An implementation of BaseGUITestRunner using Tkinter.
@@ -213,15 +249,17 @@ class TkTestRunner(BaseGUITestRunner):
         self.expectFailCountVar = tk.IntVar()
         self.remainingCountVar = tk.IntVar()
 
-        #test discovery variables
-        self.directory_to_read = ''
-
         self.top = tk.Frame()
         self.top.pack(fill=tk.BOTH, expand=1)
         self.createWidgets()
 
     def getDirectoryToDiscover(self):
         return tkFileDialog.askdirectory()
+
+    def settingsClicked(self):
+        d = DiscoverSettingsDialog(self.top, self.top_level_dir, self.test_file_glob_pattern)
+        self.top_level_dir = d.top_level_dir
+        self.test_file_glob_pattern = d.test_file_glob_pattern
 
     def notifyTestsDiscovered(self, test_suite):
         self.runCountVar.set(0)
@@ -272,6 +310,8 @@ class TkTestRunner(BaseGUITestRunner):
 
         tk.Button(buttonFrame, text="Close",
                   command=self.top.quit).pack(side=tk.BOTTOM, fill=tk.X)
+        tk.Button(buttonFrame, text="Settings",
+                  command=self.settingsClicked).pack(side=tk.BOTTOM, fill=tk.X)
 
         # Area with labels reporting results
         for label, var in (('Run:', self.runCountVar),
