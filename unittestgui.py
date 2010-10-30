@@ -279,6 +279,7 @@ class TkTestRunner(BaseGUITestRunner):
         self.progressBar.setProgressFraction(0.0)
         self.errorListbox.delete(0, tk.END)
         self.statusVar.set("Discovering tests from %s" % self.directory_to_read)
+        self.stopGoButton['state'] = tk.NORMAL
 
     def createWidgets(self):
         """Creates and packs the various widgets.
@@ -315,7 +316,7 @@ class TkTestRunner(BaseGUITestRunner):
 
 
         self.stopGoButton = tk.Button(buttonFrame, text="Start",
-                                      command=self.runClicked)
+                                      command=self.runClicked, state=tk.DISABLED)
         self.stopGoButton.pack(fill=tk.X)
 
         tk.Button(buttonFrame, text="Close",
@@ -370,7 +371,7 @@ class TkTestRunner(BaseGUITestRunner):
         self.top.update_idletasks()
 
     def notifyStopped(self):
-        self.stopGoButton.config(state=tk.ACTIVE)
+        self.stopGoButton.config(state=tk.DISABLED)
         #self.stopGoButton.config(command=self.runClicked, text="Start")
         self.statusVar.set("Idle")
 
