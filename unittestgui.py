@@ -53,6 +53,7 @@ class BaseGUITestRunner(object):
         self.currentResult = None
         self.running = 0
         self.__rollbackImporter = None
+        self.__rollbackImporter = RollbackImporter()
         self.test_suite = None
 
         #test discovery variables
@@ -76,9 +77,6 @@ class BaseGUITestRunner(object):
         if not self.test_suite:
             self.errorDialog("Test Discovery", "You discover some tests first!")
             return
-        if self.__rollbackImporter:
-            self.__rollbackImporter.rollbackImports()
-        self.__rollbackImporter = RollbackImporter()
         self.currentResult = GUITestResult(self)
         self.totalTests = self.test_suite.countTestCases()
         self.running = 1
@@ -93,6 +91,7 @@ class BaseGUITestRunner(object):
             self.currentResult.stop()
 
     def discoverClicked(self):
+        self.__rollbackImporter.rollbackImports()
         directory = self.getDirectoryToDiscover()
         if not directory:
             return
