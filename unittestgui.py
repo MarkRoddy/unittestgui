@@ -98,7 +98,11 @@ class BaseGUITestRunner(object):
             return
         self.directory_to_read = directory
         try:
-            tests = unittest2.defaultTestLoader.discover(directory, self.test_file_glob_pattern, self.top_level_dir)
+            # Explicitly use 'None' value if no top level directory is
+            # specified (indicated by empty string) as discover() explicitly
+            # checks for a 'None' to determine if no tld has been specified
+            top_level_dir = self.top_level_dir or None
+            tests = unittest2.defaultTestLoader.discover(directory, self.test_file_glob_pattern, top_level_dir)
             self.test_suite = tests
         except:
             exc_type, exc_value, exc_tb = sys.exc_info()
