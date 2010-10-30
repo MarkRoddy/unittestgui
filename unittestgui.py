@@ -223,11 +223,18 @@ class DiscoverSettingsDialog(tkSimpleDialog.Dialog):
         tk.Label(master, text="Top Level Directory").grid(row=0)
         self.e1 = tk.Entry(master, textvariable=self.dirVar)
         self.e1.grid(row = 0, column=1)
+        tk.Button(master, text="...",
+                  command=self.selectDirClicked).grid(row=0,column=3)
 
         tk.Label(master, text="Test File Pattern").grid(row=1)
         self.e2 = tk.Entry(master, textvariable = self.testPatternVar)
         self.e2.grid(row = 1, column=1)
         return None
+
+    def selectDirClicked(self):
+        dir_path = tkFileDialog.askdirectory()
+        if dir_path:
+            self.dirVar.set(dir_path)
         
     def apply(self):
         self.top_level_dir = self.dirVar.get()
