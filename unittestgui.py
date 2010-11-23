@@ -109,7 +109,7 @@ class BaseGUITestRunner(object):
             self.test_suite = tests
         except:
             exc_type, exc_value, exc_tb = sys.exc_info()
-            apply(traceback.print_exception,sys.exc_info())
+            traceback.print_exception(*sys.exc_info())
             self.errorDialog("Unable to run test '%s'" % directory,
                              "Error loading specified test: %s, %s" % (exc_type, exc_value))
             return
