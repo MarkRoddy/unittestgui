@@ -29,14 +29,18 @@ __version__ = "$Revision: 1.7 $"[11:-2]
 
 import unittest2
 import sys
-import Tkinter
-import tkMessageBox
-import tkFileDialog
-import tkSimpleDialog
 import traceback
 
-import string
-tk = Tkinter # Alternative to the messy 'from Tkinter import *' often seen
+if sys.version_info[0] == 3:
+    import tkinter as tk
+    from tkinter import messagebox
+    from tkinter import filedialog
+    from tkinter import simpledialog
+else:
+    import Tkinter as tk
+    import tkMessageBox as messagebox
+    import tkFileDialog as filedialog
+    import tkSimpleDialog as simpledialog
 
 
 ##############################################################################
@@ -193,7 +197,7 @@ class RollbackImporter:
         
     def rollbackImports(self):
         for modname in sys.modules.keys():
-            if not self.previousModules.has_key(modname):
+            if not modname in self.previousModules:
                 # Force reload when modname next imported
                 del(sys.modules[modname])
 
@@ -202,7 +206,7 @@ class RollbackImporter:
 # Tkinter GUI
 ##############################################################################
 
-class DiscoverSettingsDialog(tkSimpleDialog.Dialog):
+class DiscoverSettingsDialog(simpledialog.Dialog):
     """
     Dialog box for prompting test discovery settings
     """
@@ -216,7 +220,8 @@ class DiscoverSettingsDialog(tkSimpleDialog.Dialog):
         self.testPatternVar = tk.StringVar()
         self.testPatternVar.set(test_file_glob_pattern)
 
-        tkSimpleDialog.Dialog.__init__(self, master, title="Discover Settings", *args, **kwargs)
+        simpledialog.Dialog.__init__(self, master, title="Discover Settings",
+                                     *args, **kwargs)
 
     def body(self, master):
         tk.Label(master, text="Top Level Directory").grid(row=0)
@@ -231,7 +236,7 @@ class DiscoverSettingsDialog(tkSimpleDialog.Dialog):
         return None
 
     def selectDirClicked(self, master):
-        dir_path = tkFileDialog.askdirectory(parent=master)
+        dir_path = filedialog.askdirectory(parent=master)
         if dir_path:
             self.dirVar.set(dir_path)
         
@@ -264,7 +269,7 @@ class TkTestRunner(BaseGUITestRunner):
         self.createWidgets()
 
     def getDirectoryToDiscover(self):
-        return tkFileDialog.askdirectory()
+        return filedialog.askdirectory()
 
     def settingsClicked(self):
         d = DiscoverSettingsDialog(self.top, self.top_level_dir, self.test_file_glob_pattern)
@@ -353,8 +358,8 @@ class TkTestRunner(BaseGUITestRunner):
         self.errorListbox.configure(yscrollcommand=listScroll.set)
 
     def errorDialog(self, title, message):
-        tkMessageBox.showerror(parent=self.root, title=title,
-                               message=message)
+        messagebox.showerror(parent=self.root, title=title,
+                             message=message)
 
     def notifyRunning(self):
         self.runCountVar.set(0)
@@ -416,8 +421,8 @@ class TkTestRunner(BaseGUITestRunner):
         test, error = self.errorInfo[selected]
         tk.Label(window, text=str(test),
                  foreground="red", justify=tk.LEFT).pack(anchor=tk.W)
-        tracebackLines = apply(traceback.format_exception, error + (10,))
-        tracebackText = string.join(tracebackLines,'')
+        tracebackLines =  traceback.format_exception(*error)
+        tracebackText = "".join(tracebackLines)
         tk.Label(window, text=tracebackText, justify=tk.LEFT).pack()
         tk.Button(window, text="Close",
                   command=window.quit).pack(side=tk.BOTTOM)
@@ -431,7 +436,7 @@ class ProgressBar(tk.Frame):
     the given colour."""
 
     def __init__(self, *args, **kwargs):
-        apply(tk.Frame.__init__, (self,) + args, kwargs)
+        tk.Frame.__init__(self, *args, **kwargs)
         self.canvas = tk.Canvas(self, height='20', width='60',
                                 background='white', borderwidth=3)
         self.canvas.pack(fill=tk.X, expand=1)
