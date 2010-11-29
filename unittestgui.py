@@ -27,7 +27,6 @@ SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 __author__ = "Steve Purcell (stephen_purcell@yahoo.com)"
 __version__ = "$Revision: 1.7 $"[11:-2]
 
-import unittest2
 import sys
 import traceback
 
@@ -35,12 +34,18 @@ if sys.version_info[0] == 3:
     import tkinter as tk
     from tkinter import messagebox
     from tkinter import filedialog
-    from tkinter import simpledialog
+    from tkinter import simpledialog    
 else:
     import Tkinter as tk
     import tkMessageBox as messagebox
     import tkFileDialog as filedialog
     import tkSimpleDialog as simpledialog
+
+major,minor = sys.version_info[:2]
+if major == 3 and minor >= 2:
+    import unittest
+else:
+    import unittest2 as unittest
 
 
 ##############################################################################
@@ -105,7 +110,7 @@ class BaseGUITestRunner(object):
             # specified (indicated by empty string) as discover() explicitly
             # checks for a 'None' to determine if no tld has been specified
             top_level_dir = self.top_level_dir or None
-            tests = unittest2.defaultTestLoader.discover(directory, self.test_file_glob_pattern, top_level_dir)
+            tests = unittest.defaultTestLoader.discover(directory, self.test_file_glob_pattern, top_level_dir)
             self.test_suite = tests
         except:
             exc_type, exc_value, exc_tb = sys.exc_info()
@@ -155,20 +160,20 @@ class BaseGUITestRunner(object):
         pass
 
 
-class GUITestResult(unittest2.TestResult):
+class GUITestResult(unittest.TestResult):
     """A TestResult that makes callbacks to its associated GUI TestRunner.
     Used by BaseGUITestRunner. Need not be created directly.
     """
     def __init__(self, callback):
-        unittest2.TestResult.__init__(self)
+        unittest.TestResult.__init__(self)
         self.callback = callback
 
     def addError(self, test, err):
-        unittest2.TestResult.addError(self, test, err)
+        unittest.TestResult.addError(self, test, err)
         self.callback.notifyTestErrored(test, err)
 
     def addFailure(self, test, err):
-        unittest2.TestResult.addFailure(self, test, err)
+        unittest.TestResult.addFailure(self, test, err)
         self.callback.notifyTestFailed(test, err)
 
     def addSkip(self, test, reason):
@@ -180,11 +185,11 @@ class GUITestResult(unittest2.TestResult):
         self.callback.notifyTestFailedExpectedly(test, err)
 
     def stopTest(self, test):
-        unittest2.TestResult.stopTest(self, test)
+        unittest.TestResult.stopTest(self, test)
         self.callback.notifyTestFinished(test)
 
     def startTest(self, test):
-        unittest2.TestResult.startTest(self, test)
+        unittest.TestResult.startTest(self, test)
         self.callback.notifyTestStarted(test)
 
 
